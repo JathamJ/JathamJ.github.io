@@ -157,7 +157,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/04/22/fis3-php-use/">开发工具|fis3实现本地文件与开发机实时同步</a>
+      <a class="article-title" href="/2019/04/22/fis3-php-use/">开发工具 | fis3实现本地文件与开发机实时同步</a>
     </h1>
   
 
@@ -181,25 +181,9 @@
 </ul>
 <p><strong>fis3代码同步</strong></p>
 <p>FIS3的上传方法类似于上面的第四种。 FIS3支持文件监听，当启动文件监听时，修改文件会构建发布。通过监听文件修改，触发上传动作。实现类似于本机开发的开发体验。</p>
-<h2 id="安装-配置"><a href="#安装-配置" class="headerlink" title="安装 / 配置"></a>安装 / 配置</h2><p>FIS3安装配置十分简单。</p>
-<h4 id="客户端安装"><a href="#客户端安装" class="headerlink" title="客户端安装"></a>客户端安装</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install -g fis3</span><br></pre></td></tr></table></figure>
-<p>未安装npm的请先安装npm，推荐用cnpm安装fis3 。 安装完成后验证：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">fis3 -v</span><br><span class="line"></span><br><span class="line"> [INFO] Currently running fis3 (/Users/Your/Dev/fis3/dev/fis3)</span><br><span class="line"></span><br><span class="line">  v3.0.0</span><br><span class="line"></span><br><span class="line">   /\\\\\\\\\\\\\\\  /\\\\\\\\\\\     /\\\\\\\\\\\</span><br><span class="line">   \/\\\///////////  \/////\\\///    /\\\/////////\\\</span><br><span class="line">    \/\\\                 \/\\\      \//\\\      \///</span><br><span class="line">     \/\\\\\\\\\\\         \/\\\       \////\\\</span><br><span class="line">      \/\\\///////          \/\\\          \////\\\</span><br><span class="line">       \/\\\                 \/\\\             \////\\\</span><br><span class="line">        \/\\\                 \/\\\      /\\\      \//\\\</span><br><span class="line">         \/\\\              /\\\\\\\\\\\ \///\\\\\\\\\\\/</span><br><span class="line">          \///              \///////////    \///////////</span><br></pre></td></tr></table></figure>
-<p>返回如上，说明安装成功。</p>
-<h4 id="服务器配置"><a href="#服务器配置" class="headerlink" title="服务器配置"></a>服务器配置</h4><p>需在服务器搭建一个文件上传服务，下面举例php文件上传，用GO,PYTHON实现均可。（本案例未做任何安全验证，仅用于开发环境）</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /webroot/release.php</span><br></pre></td></tr></table></figure>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"> </span><br><span class="line">@error_reporting(E_ALL &amp; ~E_NOTICE &amp; ~E_WARNING);</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">mkdirs</span><span class="params">($path, $mod = <span class="number">0777</span>)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (is_dir($path)) &#123;</span><br><span class="line">        <span class="keyword">return</span> chmod($path, $mod);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        $old = umask(<span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span>(mkdir($path, $mod, <span class="keyword">true</span>) &amp;&amp; is_dir($path))&#123;</span><br><span class="line">            umask($old);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            umask($old);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">if</span>($_POST[<span class="string">'to'</span>])&#123;</span><br><span class="line">    $to = urldecode($_POST[<span class="string">'to'</span>]);</span><br><span class="line">    <span class="keyword">if</span>(is_dir($to) || $_FILES[<span class="string">"file"</span>][<span class="string">"error"</span>] &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        header(<span class="string">"Status: 500 Internal Server Error"</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span>(file_exists($to))&#123;</span><br><span class="line">            unlink($to);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            $dir = dirname($to);</span><br><span class="line">            <span class="keyword">if</span>(!file_exists($dir))&#123;</span><br><span class="line">                mkdirs($dir);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">echo</span> move_uploaded_file($_FILES[<span class="string">"file"</span>][<span class="string">"tmp_name"</span>], $to) ? <span class="number">0</span> : <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">'I\'m ready for that, you know I\'m yougui.'</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>至此，环境搭建完毕。</p>
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p><strong>1.本地配置好 fis-conf.js</strong></p>
-<p>在本地项目根目录创建fis-conf.js文件，写入以下内容：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fis.match(<span class="string">'*'</span>, &#123;</span><br><span class="line">    deploy: fis.plugin(<span class="string">'http-push'</span>, &#123;</span><br><span class="line">        receiver: <span class="string">'文件上传服务地址'</span>,</span><br><span class="line">        to: <span class="string">'需同步到的开发机目录绝对路径'</span></span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<p>例如：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fis.match(<span class="string">'*'</span>, &#123;</span><br><span class="line">    deploy: fis.plugin(<span class="string">'http-push'</span>, &#123;</span><br><span class="line">        receiver: <span class="string">'http://192.168.1.101/release.php'</span>,</span><br><span class="line">        to: <span class="string">'/data1/webroot/project'</span></span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<p><strong>2.执行监控命令</strong></p>
-<p>在项目文件夹执行以下命令监控：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fis3 release -w ./</span><br></pre></td></tr></table></figure>
-<p>这样，只要有修改动作就会自动上传至开发机了。</p>
-
+        
+          <a class="article-more-a" href="/2019/04/22/fis3-php-use/#more">more >></a>
+        
       
 
       
@@ -231,77 +215,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/2019/04/22/fis3-php-use/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/03/21/hello-world/">Hello World</a>
-    </h1>
-  
-
-        
-        <a href="/2019/03/21/hello-world/" class="archive-article-date">
-  	<time datetime="2019-03-21T10:04:47.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-21</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/2019/03/21/hello-world/">展开全文 >></a>
         </p>
       
 

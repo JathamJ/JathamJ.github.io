@@ -6,19 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>开发工具|fis3实现本地文件与开发机实时同步 | Jatham的博客</title>
+  <title>开发工具 | fis3实现本地文件与开发机实时同步 | Jatham的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="简介FIS3 【官方文档】是由百度开源的面向前端的工程构建工具。解决前端工程中性能优化、资源加载（异步、同步、按需、预加载、依赖管理、合并、内嵌）、模块化开发、自动化工具、开发规范、代码部署等问题。 用途虽然是前端工具，但对于脚本语言本地IDE开发代码与开发机的代码同步十分友好。 传统的代码同步方式  rsync服务同步文件修改，需开发机开启了rsync服务与相关的白名单密码配置。每次修改文件后都">
 <meta name="keywords" content="开发工具,php,node">
 <meta property="og:type" content="article">
-<meta property="og:title" content="开发工具|fis3实现本地文件与开发机实时同步">
+<meta property="og:title" content="开发工具 | fis3实现本地文件与开发机实时同步">
 <meta property="og:url" content="http://yoursite.com/2019/04/22/fis3-php-use/index.html">
 <meta property="og:site_name" content="Jatham的博客">
 <meta property="og:description" content="简介FIS3 【官方文档】是由百度开源的面向前端的工程构建工具。解决前端工程中性能优化、资源加载（异步、同步、按需、预加载、依赖管理、合并、内嵌）、模块化开发、自动化工具、开发规范、代码部署等问题。 用途虽然是前端工具，但对于脚本语言本地IDE开发代码与开发机的代码同步十分友好。 传统的代码同步方式  rsync服务同步文件修改，需开发机开启了rsync服务与相关的白名单密码配置。每次修改文件后都">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-04-22T08:19:06.000Z">
+<meta property="og:updated_time" content="2019-04-22T08:34:10.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="开发工具|fis3实现本地文件与开发机实时同步">
+<meta name="twitter:title" content="开发工具 | fis3实现本地文件与开发机实时同步">
 <meta name="twitter:description" content="简介FIS3 【官方文档】是由百度开源的面向前端的工程构建工具。解决前端工程中性能优化、资源加载（异步、同步、按需、预加载、依赖管理、合并、内嵌）、模块化开发、自动化工具、开发规范、代码部署等问题。 用途虽然是前端工具，但对于脚本语言本地IDE开发代码与开发机的代码同步十分友好。 传统的代码同步方式  rsync服务同步文件修改，需开发机开启了rsync服务与相关的白名单密码配置。每次修改文件后都">
   
     <link rel="alternative" href="/atom.xml" title="Jatham的博客" type="application/atom+xml">
@@ -156,7 +156,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      开发工具|fis3实现本地文件与开发机实时同步
+      开发工具 | fis3实现本地文件与开发机实时同步
     </h1>
   
 
@@ -180,6 +180,7 @@
 </ul>
 <p><strong>fis3代码同步</strong></p>
 <p>FIS3的上传方法类似于上面的第四种。 FIS3支持文件监听，当启动文件监听时，修改文件会构建发布。通过监听文件修改，触发上传动作。实现类似于本机开发的开发体验。</p>
+<a id="more"></a>
 <h2 id="安装-配置"><a href="#安装-配置" class="headerlink" title="安装 / 配置"></a>安装 / 配置</h2><p>FIS3安装配置十分简单。</p>
 <h4 id="客户端安装"><a href="#客户端安装" class="headerlink" title="客户端安装"></a>客户端安装</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install -g fis3</span><br></pre></td></tr></table></figure>
 <p>未安装npm的请先安装npm，推荐用cnpm安装fis3 。 安装完成后验证：</p>
@@ -308,16 +309,6 @@
 </article>
 
   
-<nav id="article-nav">
-  
-  
-    <a href="/2019/03/21/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Hello World</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
