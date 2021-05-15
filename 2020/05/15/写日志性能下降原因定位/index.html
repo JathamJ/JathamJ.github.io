@@ -6,20 +6,32 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>开发工具 | fis3实现本地文件与开发机实时同步 | Jatham的博客</title>
+  <title>记一次写日志服务qps下降问题定位与解决过程 | Jatham的博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="简介FIS3 【官方文档】是由百度开源的面向前端的工程构建工具。解决前端工程中性能优化、资源加载（异步、同步、按需、预加载、依赖管理、合并、内嵌）、模块化开发、自动化工具、开发规范、代码部署等问题。 用途虽然是前端工具，但对于脚本语言本地IDE开发代码与开发机的代码同步十分友好。 传统的代码同步方式  rsync服务同步文件修改，需开发机开启了rsync服务与相关的白名单密码配置。每次修改文件后都">
-<meta name="keywords" content="开发工具,php,node">
+  <meta name="description" content="背景线上监控用户行为服务性能下降。该服务主要用于收集用户行为（曝光、点击等）,以写日志为主，后续行为日志收集进hive。服务高峰期qps 2W+，上线前压测单机 1.2 W qps （10核 2.1GHz，内存占用6G左右），线上4台机器集群部署，正常运行6个月。近日出现问题，单机5k qps左右， tcp.alloc开始疯涨，触发机器内存监控报警。 定位问题1.看现象像是请求阻塞，导致的tcp.">
+<meta name="keywords" content="golang,pprof">
 <meta property="og:type" content="article">
-<meta property="og:title" content="开发工具 | fis3实现本地文件与开发机实时同步">
-<meta property="og:url" content="http://yoursite.com/2019/04/22/fis3-php-use/index.html">
+<meta property="og:title" content="记一次写日志服务qps下降问题定位与解决过程">
+<meta property="og:url" content="http://yoursite.com/2020/05/15/写日志性能下降原因定位/index.html">
 <meta property="og:site_name" content="Jatham的博客">
-<meta property="og:description" content="简介FIS3 【官方文档】是由百度开源的面向前端的工程构建工具。解决前端工程中性能优化、资源加载（异步、同步、按需、预加载、依赖管理、合并、内嵌）、模块化开发、自动化工具、开发规范、代码部署等问题。 用途虽然是前端工具，但对于脚本语言本地IDE开发代码与开发机的代码同步十分友好。 传统的代码同步方式  rsync服务同步文件修改，需开发机开启了rsync服务与相关的白名单密码配置。每次修改文件后都">
+<meta property="og:description" content="背景线上监控用户行为服务性能下降。该服务主要用于收集用户行为（曝光、点击等）,以写日志为主，后续行为日志收集进hive。服务高峰期qps 2W+，上线前压测单机 1.2 W qps （10核 2.1GHz，内存占用6G左右），线上4台机器集群部署，正常运行6个月。近日出现问题，单机5k qps左右， tcp.alloc开始疯涨，触发机器内存监控报警。 定位问题1.看现象像是请求阻塞，导致的tcp.">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-04-22T08:34:10.000Z">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/WX20201225-144421@2x.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/高qps磁盘io.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/新版本5000qps磁盘.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/写日志逻辑.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/内存上涨.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/cpu.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/旧版本bench.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/新版本bench.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/优化版本bench.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/优化版本压测.png">
+<meta property="og:image" content="http://yoursite.com/2020/05/15/images/性能分析/2压测.png">
+<meta property="og:updated_time" content="2021-05-15T10:12:54.594Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="开发工具 | fis3实现本地文件与开发机实时同步">
-<meta name="twitter:description" content="简介FIS3 【官方文档】是由百度开源的面向前端的工程构建工具。解决前端工程中性能优化、资源加载（异步、同步、按需、预加载、依赖管理、合并、内嵌）、模块化开发、自动化工具、开发规范、代码部署等问题。 用途虽然是前端工具，但对于脚本语言本地IDE开发代码与开发机的代码同步十分友好。 传统的代码同步方式  rsync服务同步文件修改，需开发机开启了rsync服务与相关的白名单密码配置。每次修改文件后都">
+<meta name="twitter:title" content="记一次写日志服务qps下降问题定位与解决过程">
+<meta name="twitter:description" content="背景线上监控用户行为服务性能下降。该服务主要用于收集用户行为（曝光、点击等）,以写日志为主，后续行为日志收集进hive。服务高峰期qps 2W+，上线前压测单机 1.2 W qps （10核 2.1GHz，内存占用6G左右），线上4台机器集群部署，正常运行6个月。近日出现问题，单机5k qps左右， tcp.alloc开始疯涨，触发机器内存监控报警。 定位问题1.看现象像是请求阻塞，导致的tcp.">
+<meta name="twitter:image" content="http://yoursite.com/2020/05/15/images/性能分析/WX20201225-144421@2x.png">
   
     <link rel="alternative" href="/atom.xml" title="Jatham的博客" type="application/atom+xml">
   
@@ -149,56 +161,91 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-fis3-php-use" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-写日志性能下降原因定位" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      开发工具 | fis3实现本地文件与开发机实时同步
+      记一次写日志服务qps下降问题定位与解决过程
     </h1>
   
 
         
-        <a href="/2019/04/22/fis3-php-use/" class="archive-article-date">
-  	<time datetime="2019-04-22T04:54:21.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-04-22</time>
+        <a href="/2020/05/15/写日志性能下降原因定位/" class="archive-article-date">
+  	<time datetime="2020-05-15T04:54:21.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-15</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>FIS3 <a href="http://fis.baidu.com/fis3/docs/beginning/intro.html" target="_blank" rel="noopener">【官方文档】</a>是由百度开源的面向前端的工程构建工具。解决前端工程中性能优化、资源加载（异步、同步、按需、预加载、依赖管理、合并、内嵌）、模块化开发、自动化工具、开发规范、代码部署等问题。</p>
-<h2 id="用途"><a href="#用途" class="headerlink" title="用途"></a>用途</h2><p>虽然是前端工具，但对于脚本语言本地IDE开发代码与开发机的代码同步十分友好。</p>
-<p><strong>传统的代码同步方式</strong></p>
-<ul>
-<li>rsync服务同步文件修改，需开发机开启了rsync服务与相关的白名单密码配置。每次修改文件后都需要执行rsync同步命令。</li>
-<li>SFTP/ FTP目前多数IDE都有相关服务器同步插件，使用十分便捷。修改后配置快捷键直接上传，缺点是必须能直接SSH登录或者服务器安装了FTP服务器。</li>
-<li>第三方同步，通过第三方托管代码库同步(例如git)。操作更加繁琐。</li>
-<li>文件上传服务，通过服务器文件上传，相关修改后将文件上传，目前IDE也支持相关配置。只要有能访问上传文件的地址，就可以同步。</li>
-</ul>
-<p><strong>fis3代码同步</strong></p>
-<p>FIS3的上传方法类似于上面的第四种。 FIS3支持文件监听，当启动文件监听时，修改文件会构建发布。通过监听文件修改，触发上传动作。实现类似于本机开发的开发体验。</p>
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上监控用户行为服务性能下降。该服务主要用于收集用户行为（曝光、点击等）,以写日志为主，后续行为日志收集进hive。服务高峰期qps 2W+，上线前压测单机 1.2 W qps （10核 2.1GHz，内存占用6G左右），线上4台机器集群部署，正常运行6个月。近日出现问题，单机5k qps左右， tcp.alloc开始疯涨，触发机器内存监控报警。</p>
+<h2 id="定位问题"><a href="#定位问题" class="headerlink" title="定位问题"></a>定位问题</h2><h6 id="1-看现象像是请求阻塞，导致的tcp-alloc上涨。awk分析日志发现请求平均耗时达到196ms，最大耗时4s多，（服务正常时平均耗时11ms）显然有阻塞。"><a href="#1-看现象像是请求阻塞，导致的tcp-alloc上涨。awk分析日志发现请求平均耗时达到196ms，最大耗时4s多，（服务正常时平均耗时11ms）显然有阻塞。" class="headerlink" title="1.看现象像是请求阻塞，导致的tcp.alloc上涨。awk分析日志发现请求平均耗时达到196ms，最大耗时4s多，（服务正常时平均耗时11ms）显然有阻塞。"></a>1.看现象像是请求阻塞，导致的tcp.alloc上涨。awk分析日志发现请求平均耗时达到196ms，最大耗时4s多，（服务正常时平均耗时11ms）显然有阻塞。</h6><h6 id="2-近期格式化日志代码业务逻辑无变化，两周前升级过日志依赖的中台组件库版本，猜想可能为该版本问题。"><a href="#2-近期格式化日志代码业务逻辑无变化，两周前升级过日志依赖的中台组件库版本，猜想可能为该版本问题。" class="headerlink" title="2.近期格式化日志代码业务逻辑无变化，两周前升级过日志依赖的中台组件库版本，猜想可能为该版本问题。"></a>2.近期格式化日志代码业务逻辑无变化，两周前升级过日志依赖的中台组件库版本，猜想可能为该版本问题。</h6><h6 id="3-重新压测旧版本，qps仍可达到1-2W，压测新版本qps-5k-复现线上问题，线上先回退到旧版。"><a href="#3-重新压测旧版本，qps仍可达到1-2W，压测新版本qps-5k-复现线上问题，线上先回退到旧版。" class="headerlink" title="3.重新压测旧版本，qps仍可达到1.2W，压测新版本qps 5k 复现线上问题，线上先回退到旧版。"></a>3.重新压测旧版本，qps仍可达到1.2W，压测新版本qps 5k 复现线上问题，线上先回退到旧版。</h6><h6 id="4-继续压测新版本，复现线上问题，pprof分析goroutine"><a href="#4-继续压测新版本，复现线上问题，pprof分析goroutine" class="headerlink" title="4.继续压测新版本，复现线上问题，pprof分析goroutine:"></a>4.继续压测新版本，复现线上问题，pprof分析goroutine:</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go tool pprof -http=:1234 http://192.168.121.121:8080/debug/pprof/goroutine</span><br></pre></td></tr></table></figure>
 <a id="more"></a>
-<h2 id="安装-配置"><a href="#安装-配置" class="headerlink" title="安装 / 配置"></a>安装 / 配置</h2><p>FIS3安装配置十分简单。</p>
-<h4 id="客户端安装"><a href="#客户端安装" class="headerlink" title="客户端安装"></a>客户端安装</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install -g fis3</span><br></pre></td></tr></table></figure>
-<p>未安装npm的请先安装npm，推荐用cnpm安装fis3 。 安装完成后验证：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">fis3 -v</span><br><span class="line"></span><br><span class="line"> [INFO] Currently running fis3 (/Users/Your/Dev/fis3/dev/fis3)</span><br><span class="line"></span><br><span class="line">  v3.0.0</span><br><span class="line"></span><br><span class="line">   /\\\\\\\\\\\\\\\  /\\\\\\\\\\\     /\\\\\\\\\\\</span><br><span class="line">   \/\\\///////////  \/////\\\///    /\\\/////////\\\</span><br><span class="line">    \/\\\                 \/\\\      \//\\\      \///</span><br><span class="line">     \/\\\\\\\\\\\         \/\\\       \////\\\</span><br><span class="line">      \/\\\///////          \/\\\          \////\\\</span><br><span class="line">       \/\\\                 \/\\\             \////\\\</span><br><span class="line">        \/\\\                 \/\\\      /\\\      \//\\\</span><br><span class="line">         \/\\\              /\\\\\\\\\\\ \///\\\\\\\\\\\/</span><br><span class="line">          \///              \///////////    \///////////</span><br></pre></td></tr></table></figure>
-<p>返回如上，说明安装成功。</p>
-<h4 id="服务器配置"><a href="#服务器配置" class="headerlink" title="服务器配置"></a>服务器配置</h4><p>需在服务器搭建一个文件上传服务，下面举例php文件上传，用GO,PYTHON实现均可。（本案例未做任何安全验证，仅用于开发环境）</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /webroot/release.php</span><br></pre></td></tr></table></figure>
-<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"> </span><br><span class="line">@error_reporting(E_ALL &amp; ~E_NOTICE &amp; ~E_WARNING);</span><br><span class="line"> </span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">mkdirs</span><span class="params">($path, $mod = <span class="number">0777</span>)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (is_dir($path)) &#123;</span><br><span class="line">        <span class="keyword">return</span> chmod($path, $mod);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        $old = umask(<span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span>(mkdir($path, $mod, <span class="keyword">true</span>) &amp;&amp; is_dir($path))&#123;</span><br><span class="line">            umask($old);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            umask($old);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">if</span>($_POST[<span class="string">'to'</span>])&#123;</span><br><span class="line">    $to = urldecode($_POST[<span class="string">'to'</span>]);</span><br><span class="line">    <span class="keyword">if</span>(is_dir($to) || $_FILES[<span class="string">"file"</span>][<span class="string">"error"</span>] &gt; <span class="number">0</span>)&#123;</span><br><span class="line">        header(<span class="string">"Status: 500 Internal Server Error"</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span>(file_exists($to))&#123;</span><br><span class="line">            unlink($to);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            $dir = dirname($to);</span><br><span class="line">            <span class="keyword">if</span>(!file_exists($dir))&#123;</span><br><span class="line">                mkdirs($dir);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">echo</span> move_uploaded_file($_FILES[<span class="string">"file"</span>][<span class="string">"tmp_name"</span>], $to) ? <span class="number">0</span> : <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">echo</span> <span class="string">'I\'m ready for that, you know I\'m yougui.'</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>至此，环境搭建完毕。</p>
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p><strong>1.本地配置好 fis-conf.js</strong></p>
-<p>在本地项目根目录创建fis-conf.js文件，写入以下内容：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fis.match(<span class="string">'*'</span>, &#123;</span><br><span class="line">    deploy: fis.plugin(<span class="string">'http-push'</span>, &#123;</span><br><span class="line">        receiver: <span class="string">'文件上传服务地址'</span>,</span><br><span class="line">        to: <span class="string">'需同步到的开发机目录绝对路径'</span></span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<p>例如：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fis.match(<span class="string">'*'</span>, &#123;</span><br><span class="line">    deploy: fis.plugin(<span class="string">'http-push'</span>, &#123;</span><br><span class="line">        receiver: <span class="string">'http://192.168.1.101/release.php'</span>,</span><br><span class="line">        to: <span class="string">'/data1/webroot/project'</span></span><br><span class="line">    &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<p><strong>2.执行监控命令</strong></p>
-<p>在项目文件夹执行以下命令监控：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fis3 release -w ./</span><br></pre></td></tr></table></figure>
-<p>这样，只要有修改动作就会自动上传至开发机了。</p>
+<p><img src="../images/性能分析/WX20201225-144421@2x.png" alt></p>
+<p>观察到goroutine主要阻塞在zlog.LogWrite方法。</p>
+<h6 id="5-猜想是否为磁盘io达到瓶颈？但"><a href="#5-猜想是否为磁盘io达到瓶颈？但" class="headerlink" title="5.猜想是否为磁盘io达到瓶颈？但"></a>5.猜想是否为磁盘io达到瓶颈？但</h6><p>旧版本 10000qps时：</p>
+<p><img src="../images/性能分析/高qps磁盘io.png" alt></p>
+<p>新版本 5000qps时：</p>
+<p><img src="../images/性能分析/新版本5000qps磁盘.png" alt></p>
+<p>新版本磁盘io.util更低，由此可见<strong>并非磁盘达到瓶颈</strong></p>
+<h6 id="6-查看代码逻辑："><a href="#6-查看代码逻辑：" class="headerlink" title="6.查看代码逻辑："></a>6.查看代码逻辑：</h6><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// LogWrite 将日志写入一个缓冲区1024的channel</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(w *TimeFileLogWriter)</span> <span class="title">LogWrite</span><span class="params">(rec *LogRecord)</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> !logWithBlocking &#123;</span><br><span class="line">		<span class="keyword">if</span> <span class="built_in">len</span>(w.rec) &gt;= logBufferLength &#123;</span><br><span class="line">			<span class="keyword">return</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	w.rec &lt;- rec</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//消费协程</span></span><br><span class="line"><span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">		<span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">			<span class="keyword">if</span> w.file != <span class="literal">nil</span> &#123;</span><br><span class="line">				_ = w.file.Close()</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;()</span><br><span class="line"></span><br><span class="line">		<span class="keyword">for</span> &#123;</span><br><span class="line">			<span class="keyword">select</span> &#123;</span><br><span class="line">			<span class="keyword">case</span> rec, ok := &lt;-w.rec:</span><br><span class="line">				<span class="keyword">if</span> !ok &#123;</span><br><span class="line">					<span class="keyword">return</span></span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> w.EndNotify(rec) &#123;</span><br><span class="line">					<span class="keyword">return</span></span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span> w.shouldRollover() &#123;</span><br><span class="line">					<span class="keyword">if</span> err := w.intRotate(); err != <span class="literal">nil</span> &#123;</span><br><span class="line">						_, _ = fmt.Fprintf(os.Stderr, <span class="string">"NewTimeFileLogWriterJson intRotate(%q): %s\n"</span>, w.filename, err)</span><br><span class="line">						<span class="keyword">return</span></span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="comment">//格式化日志写入文件</span></span><br><span class="line">				<span class="keyword">if</span> _, err := fmt.Fprint(w.file, FormatLogRecordJson(rec)); err != <span class="literal">nil</span> &#123;</span><br><span class="line">					_, _ = fmt.Fprintf(os.Stderr, <span class="string">"NewTimeFileLogWriterJson write(%q): %s\n"</span>, w.filename, err)</span><br><span class="line">					<span class="keyword">return</span></span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;()</span><br></pre></td></tr></table></figure>
+<p>代码逻辑为LogWrite 将日志写入一个缓冲区1024的channel，消费协程逐行读取消息格式化日志写入日志文件，逻辑如下：</p>
+<p><img src="../images/性能分析/写日志逻辑.png" alt></p>
+<h6 id="7-由此可见是消费缓慢，导致channel阻塞导致写日志send-channel阻塞。"><a href="#7-由此可见是消费缓慢，导致channel阻塞导致写日志send-channel阻塞。" class="headerlink" title="7.由此可见是消费缓慢，导致channel阻塞导致写日志send channel阻塞。"></a>7.由此可见是消费缓慢，导致channel阻塞导致写日志send channel阻塞。</h6><h6 id="8-将缓冲区调大，猜想内存占用会疯涨，压测："><a href="#8-将缓冲区调大，猜想内存占用会疯涨，压测：" class="headerlink" title="8.将缓冲区调大，猜想内存占用会疯涨，压测："></a>8.将缓冲区调大，猜想内存占用会疯涨，压测：</h6><p>6000qps：</p>
+<p><img src="../images/性能分析/内存上涨.png" alt></p>
+<p>果然内存暴涨，导致最后进程被杀死。治标不治本</p>
+<h6 id="9-pprof分析cpu耗时"><a href="#9-pprof分析cpu耗时" class="headerlink" title="9.pprof分析cpu耗时"></a>9.pprof分析cpu耗时</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go tool pprof -http=:1234  http://192.168.161.161:8947/debug/pprof/profile</span><br></pre></td></tr></table></figure>
+<p><img src="../images/性能分析/cpu.png" alt></p>
+<p>格式化日志方法 zlog.FormatLogRecordJson(rec *LogRecord) 占用时间很高，其中大量调用文本转义方法strconv.Quote(rec.Message)。</p>
+<h6 id="10-查看zlog-FormatLogRecordJson-rec-LogRecord-方法增加了对每个key-value的转义，导致channel中日志消费缓慢，导致请求阻塞。"><a href="#10-查看zlog-FormatLogRecordJson-rec-LogRecord-方法增加了对每个key-value的转义，导致channel中日志消费缓慢，导致请求阻塞。" class="headerlink" title="10.查看zlog.FormatLogRecordJson(rec *LogRecord)方法增加了对每个key value的转义，导致channel中日志消费缓慢，导致请求阻塞。"></a>10.查看zlog.FormatLogRecordJson(rec *LogRecord)方法增加了对每个key value的转义，导致channel中日志消费缓慢，导致请求阻塞。</h6><h6 id="结论：日志组件包中zlog-FormatLogRecordJson-rec-LogRecord-方法迭代，导致消费缓慢，另外逐行读取日志写文件比较占io（非本次问题瓶颈，但是个优化点，可以降低磁盘io）。"><a href="#结论：日志组件包中zlog-FormatLogRecordJson-rec-LogRecord-方法迭代，导致消费缓慢，另外逐行读取日志写文件比较占io（非本次问题瓶颈，但是个优化点，可以降低磁盘io）。" class="headerlink" title="结论：日志组件包中zlog.FormatLogRecordJson(rec *LogRecord)方法迭代，导致消费缓慢，另外逐行读取日志写文件比较占io（非本次问题瓶颈，但是个优化点，可以降低磁盘io）。"></a>结论：日志组件包中zlog.FormatLogRecordJson(rec *LogRecord)方法迭代，导致消费缓慢，另外逐行读取日志写文件比较占io（非本次问题瓶颈，但是个优化点，可以降低磁盘io）。</h6><h2 id="解决问题"><a href="#解决问题" class="headerlink" title="解决问题"></a>解决问题</h2><h6 id="1-询问中台（组件包维护方），增加此逻辑原因是数据部门分析日志时的格式要求，防止特殊字符影响，此逻辑并不能去掉。"><a href="#1-询问中台（组件包维护方），增加此逻辑原因是数据部门分析日志时的格式要求，防止特殊字符影响，此逻辑并不能去掉。" class="headerlink" title="1.询问中台（组件包维护方），增加此逻辑原因是数据部门分析日志时的格式要求，防止特殊字符影响，此逻辑并不能去掉。"></a>1.询问中台（组件包维护方），增加此逻辑原因是数据部门分析日志时的格式要求，防止特殊字符影响，此逻辑并不能去掉。</h6><h6 id="2-优化方案思考："><a href="#2-优化方案思考：" class="headerlink" title="2.优化方案思考："></a>2.优化方案思考：</h6><table>
+<thead>
+<tr>
+<th>优化思考</th>
+<th style="text-align:center">方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align:center">理想情况优化格式化日志方法性能，达到之前状态，改善逻辑或者优化标准库 appendQuotedWith 方法 。接下来做性能分析看是否可行</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align:center">将格式化日志方法放到写channel之前，会影响业务接口响应时间，需根据业务场景及性能瓶颈考虑，且不可通用，作为公共框架，不可取</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align:center"><strong>虽然并非磁盘瓶颈，但将日志改成批量写日志，可以降低磁盘io</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align:center"><strong>将格式化日志改成批量处理，然后一次写入到磁盘，会增加一些cpu占用</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align:center">增加channel缓冲区大小，可以根据内存剩余动态缓冲区大小，达到阈值再阻塞</td>
+</tr>
+</tbody>
+</table>
+<p><strong>采取方案3、4： 批量格式化日志，然后再单次写入文件</strong></p>
+<h6 id="3-代码实现："><a href="#3-代码实现：" class="headerlink" title="3.代码实现："></a>3.代码实现：</h6><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//批量格式化日志</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">BatchFormatLogRecordJson</span><span class="params">(recs []*LogRecord)</span> <span class="title">string</span></span> &#123;</span><br><span class="line">   <span class="keyword">var</span> wg sync.WaitGroup</span><br><span class="line">   wg.Add(<span class="built_in">len</span>(recs))</span><br><span class="line">   <span class="keyword">var</span> ret []<span class="keyword">string</span></span><br><span class="line">   <span class="keyword">for</span> _, rec := <span class="keyword">range</span> recs &#123;</span><br><span class="line">      <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">(rec *LogRecord)</span></span> &#123;</span><br><span class="line">         <span class="keyword">defer</span> wg.Done()</span><br><span class="line">         ret = <span class="built_in">append</span>(ret, FormatLogRecordJson(rec))</span><br><span class="line">      &#125;(rec)</span><br><span class="line">   &#125;</span><br><span class="line">   wg.Wait()</span><br><span class="line">   <span class="keyword">return</span> strings.Join(ret, <span class="string">""</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//消费协程逻辑改造</span></span><br><span class="line"><span class="keyword">var</span> recs []*LogRecord</span><br><span class="line">recs = <span class="built_in">append</span>(recs, rec)</span><br><span class="line"> </span><br><span class="line"><span class="keyword">if</span> <span class="built_in">len</span>(recs) == <span class="number">20</span> &#123;</span><br><span class="line">   <span class="keyword">if</span> _, err := fmt.Fprint(w.file, BatchFormatLogRecordJson(recs)); err != <span class="literal">nil</span> &#123;</span><br><span class="line">      _, _ = fmt.Fprintf(os.Stderr, <span class="string">"NewTimeFileLogWriterJson write(%q): %s\n"</span>, w.filename, err)</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">   &#125;</span><br><span class="line">   recs = []*LogRecord&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="4-性能测试："><a href="#4-性能测试：" class="headerlink" title="4.性能测试："></a>4.性能测试：</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go test -v -run=FormatJson -bench=FormatJson -count 4 zlog/*.go</span><br></pre></td></tr></table></figure>
+<p>旧版本：7500ns/op</p>
+<p><img src="../images/性能分析/旧版本bench.png" alt></p>
+<p>新版本（线上问题版本）：60000 ns/op</p>
+<p><img src="../images/性能分析/新版本bench.png" alt></p>
+<p>优化版本：25000 ns/op 性能提升近一倍</p>
+<p><img src="../images/性能分析/优化版本bench.png" alt></p>
+<h6 id="5-优化版本压测"><a href="#5-优化版本压测" class="headerlink" title="5.优化版本压测"></a>5.优化版本压测</h6><p>第一次压测：10000qps，成功率100%</p>
+<p><img src="../images/性能分析/优化版本压测.png" alt></p>
+<p>第二次压测：11000qps,再次复现线上问题，请求阻塞</p>
+<p><img src="../images/性能分析/2压测.png" alt></p>
+<p>此时优化版本性能已达到上限，需继续优化此方法，直到cpu.idle为0，然后还可进行cpu优化，尽可能压榨机器性能。</p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>本次因为升级依赖库，导致原本1W以上qps的服务，性能下降至5000以下。经过优化，重新恢复到qps 1W+，使服务恢复正常。后续每次升级依赖要注意重新压测。即时优化，防止问题发生。</p>
+<p>写日志方法仍有优化空间，可继续优化测试。同时需考虑热重启时缓存中日志写文件。</p>
 
       
 
@@ -233,15 +280,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">开发工具</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">golang</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">php</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">node</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">pprof</a>
         		</li>
       		
 		</ul>
@@ -297,7 +340,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/04/22/fis3-php-use/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/05/15/写日志性能下降原因定位/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -311,18 +354,18 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/06/09/golang热编译工具/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2020/12/21/机器内存上涨原因排查/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          开发工具 | golang热编译工具——gowatch、fswatch
+          Slab/dentry缓存占用上涨原因定位与解决方法
         
       </div>
     </a>
   
   
-    <a href="/2019/03/19/go项目调试/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">开发工具 | golang利用IDE轻松断点调试</div>
+    <a href="/2019/06/09/golang热编译工具/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">开发工具 | golang热编译工具——gowatch、fswatch</div>
       <i class="icon-circle-right"></i>
     </a>
   

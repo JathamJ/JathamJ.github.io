@@ -150,6 +150,251 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-机器内存上涨原因排查" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/12/21/机器内存上涨原因排查/">Slab/dentry缓存占用上涨原因定位与解决方法</a>
+    </h1>
+  
+
+        
+        <a href="/2020/12/21/机器内存上涨原因排查/" class="archive-article-date">
+  	<time datetime="2020-12-21T04:54:21.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-12-21</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>新接手一台数据机器mem.used一直上涨，内存占用达到90%（35G）以上。top命令无内存占用高的进程。查看进程内存占用：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux | awk '&#123;mem += $6&#125; END &#123;print mem/1024/1024&#125;'</span><br></pre></td></tr></table></figure>
+<p>发现进程占用仅2.17527G 。free命令查看为buffer/cache很高，很奇怪，内存都被哪里去了？</p>
+<h2 id="定位解决"><a href="#定位解决" class="headerlink" title="定位解决"></a>定位解决</h2><h4 id="1-free命令查看内存情况"><a href="#1-free命令查看内存情况" class="headerlink" title="1.free命令查看内存情况"></a>1.free命令查看内存情况</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">free -mh</span><br></pre></td></tr></table></figure>
+<p><img src="../images/内存/free.png" alt></p>
+<p>Buff/cache 占用很高</p>
+<h6 id="什么是buffer-cache？"><a href="#什么是buffer-cache？" class="headerlink" title="什么是buffer/cache？"></a>什么是buffer/cache？</h6>
+        
+          <a class="article-more-a" href="/2020/12/21/机器内存上涨原因排查/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">linux</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/12/21/机器内存上涨原因排查/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-写日志性能下降原因定位" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/05/15/写日志性能下降原因定位/">记一次写日志服务qps下降问题定位与解决过程</a>
+    </h1>
+  
+
+        
+        <a href="/2020/05/15/写日志性能下降原因定位/" class="archive-article-date">
+  	<time datetime="2020-05-15T04:54:21.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-05-15</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>线上监控用户行为服务性能下降。该服务主要用于收集用户行为（曝光、点击等）,以写日志为主，后续行为日志收集进hive。服务高峰期qps 2W+，上线前压测单机 1.2 W qps （10核 2.1GHz，内存占用6G左右），线上4台机器集群部署，正常运行6个月。近日出现问题，单机5k qps左右， tcp.alloc开始疯涨，触发机器内存监控报警。</p>
+<h2 id="定位问题"><a href="#定位问题" class="headerlink" title="定位问题"></a>定位问题</h2><h6 id="1-看现象像是请求阻塞，导致的tcp-alloc上涨。awk分析日志发现请求平均耗时达到196ms，最大耗时4s多，（服务正常时平均耗时11ms）显然有阻塞。"><a href="#1-看现象像是请求阻塞，导致的tcp-alloc上涨。awk分析日志发现请求平均耗时达到196ms，最大耗时4s多，（服务正常时平均耗时11ms）显然有阻塞。" class="headerlink" title="1.看现象像是请求阻塞，导致的tcp.alloc上涨。awk分析日志发现请求平均耗时达到196ms，最大耗时4s多，（服务正常时平均耗时11ms）显然有阻塞。"></a>1.看现象像是请求阻塞，导致的tcp.alloc上涨。awk分析日志发现请求平均耗时达到196ms，最大耗时4s多，（服务正常时平均耗时11ms）显然有阻塞。</h6><h6 id="2-近期格式化日志代码业务逻辑无变化，两周前升级过日志依赖的中台组件库版本，猜想可能为该版本问题。"><a href="#2-近期格式化日志代码业务逻辑无变化，两周前升级过日志依赖的中台组件库版本，猜想可能为该版本问题。" class="headerlink" title="2.近期格式化日志代码业务逻辑无变化，两周前升级过日志依赖的中台组件库版本，猜想可能为该版本问题。"></a>2.近期格式化日志代码业务逻辑无变化，两周前升级过日志依赖的中台组件库版本，猜想可能为该版本问题。</h6><h6 id="3-重新压测旧版本，qps仍可达到1-2W，压测新版本qps-5k-复现线上问题，线上先回退到旧版。"><a href="#3-重新压测旧版本，qps仍可达到1-2W，压测新版本qps-5k-复现线上问题，线上先回退到旧版。" class="headerlink" title="3.重新压测旧版本，qps仍可达到1.2W，压测新版本qps 5k 复现线上问题，线上先回退到旧版。"></a>3.重新压测旧版本，qps仍可达到1.2W，压测新版本qps 5k 复现线上问题，线上先回退到旧版。</h6><h6 id="4-继续压测新版本，复现线上问题，pprof分析goroutine"><a href="#4-继续压测新版本，复现线上问题，pprof分析goroutine" class="headerlink" title="4.继续压测新版本，复现线上问题，pprof分析goroutine:"></a>4.继续压测新版本，复现线上问题，pprof分析goroutine:</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go tool pprof -http=:1234 http://192.168.121.121:8080/debug/pprof/goroutine</span><br></pre></td></tr></table></figure>
+        
+          <a class="article-more-a" href="/2020/05/15/写日志性能下降原因定位/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">golang</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">pprof</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2020/05/15/写日志性能下降原因定位/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-golang热编译工具" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/06/09/golang热编译工具/">开发工具 | golang热编译工具——gowatch、fswatch</a>
+    </h1>
+  
+
+        
+        <a href="/2019/06/09/golang热编译工具/" class="archive-article-date">
+  	<time datetime="2019-06-09T04:54:21.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-06-09</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>go项目本地开发，如果代码有变动，需要实时编译以提高开发效率。</p>
+<p>这里为大家介绍两种热编译工具：gowatch、fswatch</p>
+<h2 id="gowatch"><a href="#gowatch" class="headerlink" title="gowatch"></a>gowatch</h2><h6 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h6><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get -u github.com/silenceper/gowatch</span><br></pre></td></tr></table></figure>
+        
+          <a class="article-more-a" href="/2019/06/09/golang热编译工具/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">开发工具</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">golang</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/06/09/golang热编译工具/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-fis3-php-use" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -244,6 +489,90 @@
 
 
   
+    <article id="post-go项目调试" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/03/19/go项目调试/">开发工具 | golang利用IDE轻松断点调试</a>
+    </h1>
+  
+
+        
+        <a href="/2019/03/19/go项目调试/" class="archive-article-date">
+  	<time datetime="2019-03-19T04:54:21.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-03-19</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>开发、排查问题不可避免的需要断点调试的情况，以快速定位问题。就像c可以用gdb调试一样，golang也有诸如dlv等调试工具。但命令行调试过程不够直观也比较繁琐。好在目前的IDE(GoLand、IntelliJ)都支持了断点调试，本文将为您介绍如何利用IDE快速打断点调试go服务。</p>
+        
+          <a class="article-more-a" href="/2019/03/19/go项目调试/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">开发工具</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">golang</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">ide</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/03/19/go项目调试/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
   
 
 
@@ -254,7 +583,7 @@
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2019 Jatham
+    		&copy; 2021 Jatham
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
@@ -338,6 +667,22 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color5">node</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color2">golang</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">ide</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">pprof</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">linux</a>
               </li>
             
             <div class="clearfix"></div>
