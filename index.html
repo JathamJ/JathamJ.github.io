@@ -174,7 +174,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux | awk '&#123;mem += $6&#125; END &#123;print mem/1024/1024&#125;'</span><br></pre></td></tr></table></figure>
 <p>发现进程占用仅2.17527G 。free命令查看为buffer/cache很高，很奇怪，内存都被哪里去了？</p>
 <h2 id="定位解决"><a href="#定位解决" class="headerlink" title="定位解决"></a>定位解决</h2><h4 id="1-free命令查看内存情况"><a href="#1-free命令查看内存情况" class="headerlink" title="1.free命令查看内存情况"></a>1.free命令查看内存情况</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">free -mh</span><br></pre></td></tr></table></figure>
-<p><img src="../images/内存/free.png" alt></p>
+<p><img src="/images/内存/free.png" alt></p>
 <p>Buff/cache 占用很高</p>
 <h6 id="什么是buffer-cache？"><a href="#什么是buffer-cache？" class="headerlink" title="什么是buffer/cache？"></a>什么是buffer/cache？</h6>
         

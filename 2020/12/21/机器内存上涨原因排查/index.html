@@ -16,15 +16,15 @@
 <meta property="og:site_name" content="Jatham的博客">
 <meta property="og:description" content="背景新接手一台数据机器mem.used一直上涨，内存占用达到90%（35G）以上。top命令无内存占用高的进程。查看进程内存占用： 1ps aux | awk &apos;&amp;#123;mem += $6&amp;#125; END &amp;#123;print mem/1024/1024&amp;#125;&apos; 发现进程占用仅2.17527G 。free命令查看为buffer/cache很高，很奇怪，内存都被哪里去了？ 定位解决1">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="http://yoursite.com/2020/12/21/images/内存/free.png">
-<meta property="og:image" content="http://yoursite.com/2020/12/21/images/内存/slab2.png">
-<meta property="og:image" content="http://yoursite.com/2020/12/21/images/内存/dentry.png">
-<meta property="og:image" content="http://yoursite.com/2020/12/21/images/内存/clear.png">
-<meta property="og:updated_time" content="2021-05-15T10:24:33.773Z">
+<meta property="og:image" content="http://yoursite.com/images/内存/free.png">
+<meta property="og:image" content="http://yoursite.com/images/内存/slab2.png">
+<meta property="og:image" content="http://yoursite.com/images/内存/dentry.png">
+<meta property="og:image" content="http://yoursite.com/images/内存/clear.png">
+<meta property="og:updated_time" content="2021-05-24T14:24:57.964Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Slab&#x2F;dentry缓存占用上涨原因定位与解决方法">
 <meta name="twitter:description" content="背景新接手一台数据机器mem.used一直上涨，内存占用达到90%（35G）以上。top命令无内存占用高的进程。查看进程内存占用： 1ps aux | awk &apos;&amp;#123;mem += $6&amp;#125; END &amp;#123;print mem/1024/1024&amp;#125;&apos; 发现进程占用仅2.17527G 。free命令查看为buffer/cache很高，很奇怪，内存都被哪里去了？ 定位解决1">
-<meta name="twitter:image" content="http://yoursite.com/2020/12/21/images/内存/free.png">
+<meta name="twitter:image" content="http://yoursite.com/images/内存/free.png">
   
     <link rel="alternative" href="/atom.xml" title="Jatham的博客" type="application/atom+xml">
   
@@ -178,7 +178,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux | awk '&#123;mem += $6&#125; END &#123;print mem/1024/1024&#125;'</span><br></pre></td></tr></table></figure>
 <p>发现进程占用仅2.17527G 。free命令查看为buffer/cache很高，很奇怪，内存都被哪里去了？</p>
 <h2 id="定位解决"><a href="#定位解决" class="headerlink" title="定位解决"></a>定位解决</h2><h4 id="1-free命令查看内存情况"><a href="#1-free命令查看内存情况" class="headerlink" title="1.free命令查看内存情况"></a>1.free命令查看内存情况</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">free -mh</span><br></pre></td></tr></table></figure>
-<p><img src="../images/内存/free.png" alt></p>
+<p><img src="/images/内存/free.png" alt></p>
 <p>Buff/cache 占用很高</p>
 <h6 id="什么是buffer-cache？"><a href="#什么是buffer-cache？" class="headerlink" title="什么是buffer/cache？"></a>什么是buffer/cache？</h6><a id="more"></a>
 <p>在Linux的内存管理中，<strong>这里的buffer指Linux内存的：Buffer cache。这里的cache指Linux内存中的：Page cache</strong>。翻译成中文可以叫做<strong>缓冲区缓存和页面缓存。</strong></p>
@@ -186,13 +186,13 @@
 <h6 id="什么是page-cache？"><a href="#什么是page-cache？" class="headerlink" title="什么是page cache？"></a>什么是page cache？</h6><p>Page cache主要用来<strong>作为文件系统上的文件数据的缓存</strong>来用，尤其是针对当进程对文件有read／write操作的时候。如果你仔细想想的话，作为可以映射文件到内存的系统调用：mmap是不是很自然的也应该用到page cache？在当前的系统实现里，page cache也被作为其它文件类型的缓存设备来用，所以**事实上page cache也负责了大部分的块设备文件的缓存工作。</p>
 <h4 id="2-查看内存信息"><a href="#2-查看内存信息" class="headerlink" title="2.查看内存信息"></a>2.查看内存信息</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/meminfo</span><br></pre></td></tr></table></figure>
 <p>结果：</p>
-<p><img src="../images/内存/slab2.png" alt></p>
+<p><img src="/images/内存/slab2.png" alt></p>
 <p>发现主要占用为slab缓存。且大部分为SReclaimable（可回收），SUnreclaim为不可回收。那么为什么没有被回收呢？</p>
 <blockquote>
 <p>Slab是用于存放内核数据结构缓存，简单的说内核为了高性能每个需要重复使用的对象都会有个池，这个slab池会cache大量常用的对象，所以会消耗大量的内存。slab内存分配机制可参考<a href="http://c.biancheng.net/view/1284.html" target="_blank" rel="noopener">http://c.biancheng.net/view/1284.html</a></p>
 </blockquote>
 <h4 id="3-通过slabtop命令查看这部分内存的使用情况"><a href="#3-通过slabtop命令查看这部分内存的使用情况" class="headerlink" title="3.通过slabtop命令查看这部分内存的使用情况"></a>3.通过slabtop命令查看这部分内存的使用情况</h4><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">slabtop</span><br></pre></td></tr></table></figure>
-<p><img src="../images/内存/dentry.png" alt></p>
+<p><img src="/images/内存/dentry.png" alt></p>
 <p>大部分被dentry占用。</p>
 <blockquote>
 <p>dentry_cache为目录项高速缓存，是Linux为了提高目录项对象的处理效率而设计的；它记录了目录项到inode的映射关系。因此，当应用程序发起stat系统调用时，就会创建对应的dentry_cache项（更进一步，如果每次stat的文件都是不存在的文件，那么总是会有大量新的dentry_cache项被创建）</p>
@@ -204,7 +204,7 @@
 <p>也可以通过sysctl命令进行设置：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo sysctl -w vm.drop_caches=3</span><br><span class="line">sudo sysctl -w vm.drop_caches=0</span><br></pre></td></tr></table></figure>
 <p>注：<strong><em>手动清除缓存可能会在一段时间内降低系统性能</em></strong>。原则上不推荐这么做，因为如果有需要，系统会自动释放出内存供其他程序使用。</p>
-<h4 id="2-执行-echo-2-gt-proc-sys-vm-drop-caches-清除缓存"><a href="#2-执行-echo-2-gt-proc-sys-vm-drop-caches-清除缓存" class="headerlink" title="2.执行 echo 2 &gt; /proc/sys/vm/drop_caches 清除缓存"></a>2.执行 echo 2 &gt; /proc/sys/vm/drop_caches 清除缓存</h4><p><img src="../images/内存/clear.png" alt></p>
+<h4 id="2-执行-echo-2-gt-proc-sys-vm-drop-caches-清除缓存"><a href="#2-执行-echo-2-gt-proc-sys-vm-drop-caches-清除缓存" class="headerlink" title="2.执行 echo 2 &gt; /proc/sys/vm/drop_caches 清除缓存"></a>2.执行 echo 2 &gt; /proc/sys/vm/drop_caches 清除缓存</h4><p><img src="/images/内存/clear.png" alt></p>
 <p>清除后恢复正常，但是buff/cache仍缓慢上涨，需要定位是哪个进程的问题。</p>
 <p>手动清除Slab缓存是一个治标不治本的办法。因为问题不在Slab，而在于我们那个会引起Slab缓存飙涨的进程。实际操作的时候发现，清除缓存一段时间后，Slab缓存很快又会“反弹”回去。如果需要治本，要么搞定问题进程，要么修改系统配置。</p>
 <h4 id="3-调整系统vm配置"><a href="#3-调整系统vm配置" class="headerlink" title="3.调整系统vm配置"></a>3.调整系统vm配置</h4><ul>

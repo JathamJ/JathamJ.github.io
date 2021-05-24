@@ -16,17 +16,17 @@
 <meta property="og:site_name" content="Jatham的博客">
 <meta property="og:description" content="前言开发、排查问题不可避免的需要断点调试的情况，以快速定位问题。就像c可以用gdb调试一样，golang也有诸如dlv等调试工具。但命令行调试过程不够直观也比较繁琐。好在目前的IDE(GoLand、IntelliJ)都支持了断点调试，本文将为您介绍如何利用IDE快速打断点调试go服务。">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="http://yoursite.com/2019/03/19/images/断点调试/WX20201224-115715@2x.png">
-<meta property="og:image" content="http://yoursite.com/2019/03/19/images/断点调试/WX20201224-120221@2x.png">
-<meta property="og:image" content="http://yoursite.com/2019/03/19/images/断点调试/WX20201224-150058@2x.png">
-<meta property="og:image" content="http://yoursite.com/2019/03/19/images/断点调试/WX20201224-145753@2x.png">
-<meta property="og:image" content="http://yoursite.com/2019/03/19/images/断点调试/WX20201224-150631@2x.png">
-<meta property="og:image" content="http://yoursite.com/2019/03/19/images/断点调试/WX20201224-151440@2x.png">
-<meta property="og:updated_time" content="2021-05-15T09:59:21.282Z">
+<meta property="og:image" content="http://yoursite.com/images/断点调试/WX20201224-115715@2x.png">
+<meta property="og:image" content="http://yoursite.com/images/断点调试/WX20201224-120221@2x.png">
+<meta property="og:image" content="http://yoursite.com/images/断点调试/WX20201224-150058@2x.png">
+<meta property="og:image" content="http://yoursite.com/images/断点调试/WX20201224-145753@2x.png">
+<meta property="og:image" content="http://yoursite.com/images/断点调试/WX20201224-150631@2x.png">
+<meta property="og:image" content="http://yoursite.com/images/断点调试/WX20201224-151440@2x.png">
+<meta property="og:updated_time" content="2021-05-24T14:25:52.317Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="开发工具 | golang利用IDE轻松断点调试">
 <meta name="twitter:description" content="前言开发、排查问题不可避免的需要断点调试的情况，以快速定位问题。就像c可以用gdb调试一样，golang也有诸如dlv等调试工具。但命令行调试过程不够直观也比较繁琐。好在目前的IDE(GoLand、IntelliJ)都支持了断点调试，本文将为您介绍如何利用IDE快速打断点调试go服务。">
-<meta name="twitter:image" content="http://yoursite.com/2019/03/19/images/断点调试/WX20201224-115715@2x.png">
+<meta name="twitter:image" content="http://yoursite.com/images/断点调试/WX20201224-115715@2x.png">
   
     <link rel="alternative" href="/atom.xml" title="Jatham的博客" type="application/atom+xml">
   
@@ -180,13 +180,13 @@
 <a id="more"></a>
 <h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><p>下载新版GoLand即可。我这里演示的是IntelliJ安装最新的go插件，操作流程都是一样的。</p>
 <h2 id="调试过程"><a href="#调试过程" class="headerlink" title="调试过程"></a>调试过程</h2><p>接下来将带您演示调试go web服务过程：</p>
-<h6 id="1-新增debug配置（Run-Debug-Configureations）"><a href="#1-新增debug配置（Run-Debug-Configureations）" class="headerlink" title="1.新增debug配置（Run/Debug Configureations）"></a>1.新增debug配置（Run/Debug Configureations）</h6><p><img src="../images/断点调试/WX20201224-115715@2x.png" alt></p>
-<p><img src="../images/断点调试/WX20201224-120221@2x.png" alt></p>
-<h6 id="2-点击绿色爬虫图标开始debug运行项目"><a href="#2-点击绿色爬虫图标开始debug运行项目" class="headerlink" title="2.点击绿色爬虫图标开始debug运行项目"></a>2.点击绿色爬虫图标开始debug运行项目</h6><p><img src="../images/断点调试/WX20201224-150058@2x.png" alt></p>
-<h6 id="3-点击代码区左侧相应行打断点（出现红点）"><a href="#3-点击代码区左侧相应行打断点（出现红点）" class="headerlink" title="3.点击代码区左侧相应行打断点（出现红点）"></a>3.点击代码区左侧相应行打断点（出现红点）</h6><p><img src="../images/断点调试/WX20201224-145753@2x.png" alt></p>
+<h6 id="1-新增debug配置（Run-Debug-Configureations）"><a href="#1-新增debug配置（Run-Debug-Configureations）" class="headerlink" title="1.新增debug配置（Run/Debug Configureations）"></a>1.新增debug配置（Run/Debug Configureations）</h6><p><img src="/images/断点调试/WX20201224-115715@2x.png" alt></p>
+<p><img src="/images/断点调试/WX20201224-120221@2x.png" alt></p>
+<h6 id="2-点击绿色爬虫图标开始debug运行项目"><a href="#2-点击绿色爬虫图标开始debug运行项目" class="headerlink" title="2.点击绿色爬虫图标开始debug运行项目"></a>2.点击绿色爬虫图标开始debug运行项目</h6><p><img src="/images/断点调试/WX20201224-150058@2x.png" alt></p>
+<h6 id="3-点击代码区左侧相应行打断点（出现红点）"><a href="#3-点击代码区左侧相应行打断点（出现红点）" class="headerlink" title="3.点击代码区左侧相应行打断点（出现红点）"></a>3.点击代码区左侧相应行打断点（出现红点）</h6><p><img src="/images/断点调试/WX20201224-145753@2x.png" alt></p>
 <h6 id="4-发起请求，查看效果"><a href="#4-发起请求，查看效果" class="headerlink" title="4.发起请求，查看效果"></a>4.发起请求，查看效果</h6><p>此时请求会等待，程序运行至断点处显示相应变量值</p>
-<p><img src="../images/断点调试/WX20201224-150631@2x.png" alt></p>
-<h6 id="5-点击debugger控制台右侧绿箭头可以继续执行到下一断点，控制台其他按钮作用参考下图："><a href="#5-点击debugger控制台右侧绿箭头可以继续执行到下一断点，控制台其他按钮作用参考下图：" class="headerlink" title="5.点击debugger控制台右侧绿箭头可以继续执行到下一断点，控制台其他按钮作用参考下图："></a>5.点击debugger控制台右侧绿箭头可以继续执行到下一断点，控制台其他按钮作用参考下图：</h6><p><img src="../images/断点调试/WX20201224-151440@2x.png" alt></p>
+<p><img src="/images/断点调试/WX20201224-150631@2x.png" alt></p>
+<h6 id="5-点击debugger控制台右侧绿箭头可以继续执行到下一断点，控制台其他按钮作用参考下图："><a href="#5-点击debugger控制台右侧绿箭头可以继续执行到下一断点，控制台其他按钮作用参考下图：" class="headerlink" title="5.点击debugger控制台右侧绿箭头可以继续执行到下一断点，控制台其他按钮作用参考下图："></a>5.点击debugger控制台右侧绿箭头可以继续执行到下一断点，控制台其他按钮作用参考下图：</h6><p><img src="/images/断点调试/WX20201224-151440@2x.png" alt></p>
 
       
 
